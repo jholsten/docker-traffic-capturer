@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM nicolaka/netshoot:v0.11
 
 RUN python3 -m pip install -U pip
 
