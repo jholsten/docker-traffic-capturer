@@ -32,6 +32,11 @@ class Capture:
     """Packets that have been collected so far since the last call to 
     the `collect` method."""
 
+    _continue: bool
+    """Whether to continue the live capture.
+    Since Pyshark does not offer a possibility to stop live capturing,
+    we use this variable to control whether to continue the capture."""
+
     @property
     def interface_id(self) -> str:
         """ID of the network interface on which the traffic is monitored.
@@ -40,11 +45,17 @@ class Capture:
         return "br-" + self.network_id[:12]
 
     def __init__(self):
+        self._continue = True
+        self._packets = []
         network_id = os.environ.get("NETWORK_ID")
         if not network_id:
             raise Exception("Environment variable 'NETWORK_ID' needs to be set.")
-        if not len(network_id) not in [12, 64]:
-            raise Exception("Network ID needs to correspond to either the non-truncated SHA-256 ID or the ID truncated to 12 characters.")
+        if len(network_id) not in [12, 64]:
+            raise Exception(
+                f"Network ID {network_id} needs to correspond to either the non-truncated "
+                "SHA-256 ID or the ID truncated to 12 characters."
+            )
+        self.network_id = network_id
         LOGGER.info(f"Will capture packets for network {network_id}.")
         self._assert_interface_id_exists()
 
@@ -52,10 +63,29 @@ class Capture:
         """Starts capturing HTTP packets on the `interface_id`."""
         LOGGER.info(f"Starting to capture HTTP packets on interface ID {self.interface_id}.")
         capture = pyshark.LiveCapture(interface=self.interface_id, capture_filter="http")
-        capture.apply_on_packets(self._on_packet_captured)
+        for packet in capture.sniff_continuously():
+            if not self._continue:
+                break
+            self._on_packet_captured(packet)
+        LOGGER.info("Stopped capturing packets.")
+
+    def stop(self):
+        """Stops capturing HTTP packets."""
+        LOGGER.info("Stops capturing packets...")
+        self._continue = False
+
+    def get_all(self) -> List[HttpPacket]:
+        """Returns all packets that have been captured since the start of
+        recording or - if `collect` has been called in the meantime - since
+        the last time `collect` was called."""
+        return self._packets
 
     def collect(self) -> List[HttpPacket]:
-        raise Exception()  # TODO
+        """Returns all packages that have been recorded since the last time
+        this method was called."""
+        collected_packets = self._packets.copy()
+        self._packets = [p for p in self._packets if p not in collected_packets]
+        return collected_packets
 
     def _on_packet_captured(self, packet: PysharkPacket):
         """Callback function which is executed when a new package was captured.
@@ -63,6 +93,7 @@ class Capture:
         http_packet = self._parse_http_packet(packet)
         if http_packet is not None:
             self._packets.append(http_packet)
+            LOGGER.debug(f"Captured packet {http_packet}.")
 
     def _assert_interface_id_exists(self):
         """Asserts that the `interface_id` is available on this host."""
