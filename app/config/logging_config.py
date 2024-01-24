@@ -38,7 +38,7 @@ class LoggerFormatter(logging.Formatter):
         return f"[{name}.{function}:{line}]"
 
 
-def configure_root_logger() -> logging.Logger:
+def configure_root_logger():
     """Configures root logger to use the custom formatter."""
     logger = logging.getLogger()
     logger.handlers.clear()
@@ -48,7 +48,6 @@ def configure_root_logger() -> logging.Logger:
     stream_handler.setLevel(logging.DEBUG)
     stream_handler.setFormatter(LoggerFormatter())
     logger.addHandler(stream_handler)
-    return logger
 
 
 def get_logger(name: str) -> logging.Logger:
