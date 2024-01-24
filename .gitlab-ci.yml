@@ -1,0 +1,26 @@
+variables:
+  DOCKER_TLS_CERTDIR: ""
+  LATEST_IMAGE: ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:latest
+
+services:
+  - name: docker:20.10.20-dind
+    alias: docker
+    command: ["--tls=false"]
+
+stages:
+  - build
+
+.setup:
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+build:
+  extends: .setup
+  stage: build
+  image: docker:20.10.20
+  script:
+    - docker build -t $LATEST_IMAGE .
+    - docker push $LATEST_IMAGE
+  tags:
+    - docker
+    - amd64
