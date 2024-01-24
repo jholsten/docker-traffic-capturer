@@ -1,5 +1,11 @@
 # Docker-Traffic-Capturer
-Tool with which the TCP traffic of a Docker network can be monitored.
+Tool with which the HTTP traffic of a Docker network can be monitored.
+
+## Usage
+```
+docker build -t docker-traffic-capturer .
+docker run --net=host -e NETWORK_ID=$NETWORK_ID --rm docker-traffic-capturer
+```
 
 ## Development
 ### Create a local virtual environment
