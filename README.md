@@ -17,6 +17,27 @@ The ID of the network to be monitored must be supplied as the environment variab
 docker run --net=host -e NETWORK_ID=$NETWORK_ID --rm docker-traffic-capturer
 ```
 
+With this command, the REST API is started by default on a randomly selected available port in order to be able to run multiple containers simultaneously in the host's network.
+The selected port is then stored in a file named `API_PORT` in the working directory `/app`.
+As an alternative to the random selection of a port, the port can also be specified via an environment variable named `FIXED_API_PORT`.
+
+### Retrieving the collected Packets
+The captured packets can be retrieved via two different API endpoints:
+- `GET /collect` - Returns the collected packets as a JSON array.
+- `POST /collect/file/$filename` - Stores the collected packets in a file named `filename`.
+
+Note that calling one of these two endpoints causes the internal memory to be reset.
+The next time any of these endpoints is called, only the new packets captured afterwards will be available.
+
+#### Retrieving the collected Packets on MacOS and Windows
+Since publishing a port in network mode "host" is only supported on Linux, but not on Windows or MacOS, the API cannot be accessed by such hosts (see [Docker Documentation](https://docs.docker.com/network/drivers/host/)).
+Therefore, the bash script `collect_to_file.sh` offers an alternative with which the endpoint `POST /collect/file/$filename` can be called in order to store the collected packets in a file.
+This script can be executed within the container using the `docker exec` command and passing the name of the file to which the packets are to be written via the parameter `-f`.
+
+```
+docker exec $CONTAINER_NAME sh -c "sh collect_to_file.sh -f $filename"
+```
+
 ### How to obtain the Network ID?
 To obtain the ID of the network you want to monitor, there are several options.
 

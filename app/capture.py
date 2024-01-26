@@ -1,7 +1,9 @@
+import json
 import os
 from typing import Dict, List, Optional, Tuple, cast
 
 import pyshark
+from fastapi.encoders import jsonable_encoder
 from pyshark.packet.fields import LayerField, LayerFieldsContainer
 from pyshark.packet.layers.base import BaseLayer
 from pyshark.packet.packet import Packet as PysharkPacket
@@ -83,9 +85,21 @@ class Capture:
     def collect(self) -> List[HttpPacket]:
         """Returns all packages that have been recorded since the last time
         this method was called."""
+        LOGGER.info("Collecting packets...")
         collected_packets = self._packets.copy()
         self._packets = [p for p in self._packets if p not in collected_packets]
+        LOGGER.info(f"Collected {len(collected_packets)} packets.")
         return collected_packets
+
+    def collect_to_file(self, filename: str):
+        """Collects all packages that have been recorded since the last time
+        `collect` was called and stores all captured packets in a file with
+        the given name."""
+        LOGGER.info(f"Collecting packets to file '{filename}'...")
+        collected_packets = self.collect()
+        with open(filename, "w") as file:
+            json.dump(jsonable_encoder(collected_packets), file, indent=4)
+        LOGGER.info(f"Stored collected packets in file '{filename}'.")
 
     def _on_packet_captured(self, packet: PysharkPacket):
         """Callback function which is executed when a new package was captured.
