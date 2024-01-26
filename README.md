@@ -34,7 +34,7 @@ Since publishing a port in network mode "host" is only supported on Linux, but n
 Therefore, the bash script `collect_to_file.sh` offers an alternative with which the endpoint `POST /collect/file/$filename` can be called in order to store the collected packets in a file.
 This script can be executed within the container using the `docker exec` command and passing the name of the file to which the packets are to be written via the parameter `-f`.
 
-```
+```sh
 docker exec $CONTAINER_NAME sh -c "sh collect_to_file.sh -f $filename"
 ```
 
@@ -84,19 +84,19 @@ In the following description, [Anaconda](https://docs.anaconda.com/) is used.
 
 - Create a new virtual environment
 
-```
+```sh
 conda create --force --name docker_traffic_capturer_env python=3.9
 ```
 
 - Activate the newly-created environment
 
-```
+```sh
 conda activate docker_traffic_capturer_env
 ```
 
 - Install the dependencies listed in `requirements.txt`
 
-```
+```sh
 pip install -r requirements.txt
 ```
 
