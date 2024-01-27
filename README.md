@@ -5,12 +5,17 @@ Tool with which the HTTP traffic of a Docker network can be captured.
 When starting the application, [PyShark](https://kiminewt.github.io/pyshark/), a Python wrapper for [tshark](https://www.wireshark.org/docs/man-pages/tshark.html), is started to capture all HTTP packets in a given Docker bridge network.
 The captured packets are stored locally and can be retrieved via the application's REST API.
 
-To start the application, first build the Docker image with the following command.
+The application is available as a Docker image 
+```
+gitlab.informatik.uni-bremen.de:5005/jholsten/docker-traffic-capturer:latest
+```
+in the [Container Registry](https://gitlab.informatik.uni-bremen.de/jholsten/docker-traffic-capturer/container_registry).
+Alternatively, you can also build the image from source.
 ```sh
 docker build -t docker-traffic-capturer .
 ```
 
-Now you can start the container you have just built with the following command to start capturing the packets.
+Now you can start the container with the following command to start capturing the packets.
 Note that the container must be started in **network mode "host"**, otherwise it does not have access to the network interface.
 The ID of the network to be monitored must be supplied as the environment variable `NETWORK_ID`.
 ```sh
@@ -31,11 +36,25 @@ The next time any of these endpoints is called, only the new packets captured af
 
 #### Retrieving the collected Packets on MacOS and Windows
 Since publishing a port in network mode "host" is only supported on Linux, but not on Windows or MacOS, the API cannot be accessed by such hosts (see [Docker Documentation](https://docs.docker.com/network/drivers/host/)).
+Therefore, the bash scripts `collect.sh` and `collect_to_file.sh` offer an alternative with which the endpoints `GET /collect` and `POST /collect/file/$filename` can be called from inside the container.
+
+##### `collect.sh`
+By executing `collect.sh`, the packets collected so far can be retrieved.
+The script calls the endpoint `GET /collect` and outputs the result to STDOUT.
+To execute the script from outside the container, use the `docker exec` command.
+
+```sh
+docker exec $CONTAINER_ID sh -c "sh collect.sh"
+```
+
+##### `collect_to_file.sh`
+Executing the bash script `collect_to_file.sh` allows to store the collected packets in a given file.
+The name of the file to which the packets are to be written needs to be supplied via the parameter `-f`.
 Therefore, the bash script `collect_to_file.sh` offers an alternative with which the endpoint `POST /collect/file/$filename` can be called in order to store the collected packets in a file.
 This script can be executed within the container using the `docker exec` command and passing the name of the file to which the packets are to be written via the parameter `-f`.
 
 ```sh
-docker exec $CONTAINER_NAME sh -c "sh collect_to_file.sh -f $filename"
+docker exec $CONTAINER_ID sh -c "sh collect_to_file.sh -f $filename"
 ```
 
 ### How to obtain the Network ID?
