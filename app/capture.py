@@ -49,7 +49,7 @@ class Capture:
     def __init__(self):
         self._continue = True
         self._packets = []
-        network_id = os.environ.get("NETWORK_ID")
+        network_id = os.environ.get("NETWORK_ID", None)
         if not network_id:
             raise Exception("Environment variable 'NETWORK_ID' needs to be set.")
         if len(network_id) not in [12, 64]:
