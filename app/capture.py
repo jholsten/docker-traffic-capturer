@@ -35,10 +35,8 @@ class Capture:
     """Packets that have been collected so far since the last call to 
     the `collect` method."""
 
-    _continue: bool
-    """Whether to continue the live capture.
-    Since Pyshark does not offer a possibility to stop live capturing,
-    we use this variable to control whether to continue the capture."""
+    _capture: Optional[pyshark.LiveCapture]
+    """Instance for capturing packets from the network."""
 
     @property
     def interface_id(self) -> str:
@@ -63,20 +61,18 @@ class Capture:
         self._assert_interface_id_exists()
 
     def start(self):
-        """Starts capturing HTTP packets on the `interface_id`."""
-        LOGGER.info(f"Initializing live capture for interface ID {self.interface_id}...")
-        capture = pyshark.LiveCapture(interface=self.interface_id, capture_filter="http")
-        LOGGER.info("Live capture initialization complete.")
-        for packet in capture.sniff_continuously():
-            if not self._continue:
-                break
-            self._on_packet_captured(packet)
-        LOGGER.info("Stopped capturing packets.")
+        """Starts capturing HTTP packets on the `interface_id`. Note that it takes a couple
+        of milliseconds until TShark actually starts capturing packets."""
+        LOGGER.info(f"Starting live capture for interface ID {self.interface_id}...")
+        capture = pyshark.LiveCapture(interface=self.interface_id, capture_filter="http", debug=True)
+        capture.apply_on_packets(self._on_packet_captured)
 
     def stop(self):
         """Stops capturing HTTP packets."""
         LOGGER.info("Stops capturing packets...")
-        self._continue = False
+        if self._capture is None or self._capture.eventloop is None:
+            return
+        self._capture.eventloop.stop()
 
     def get_all(self) -> List[HttpPacket]:
         """Returns all packets that have been captured since the start of
