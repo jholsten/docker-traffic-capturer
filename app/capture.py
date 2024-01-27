@@ -64,8 +64,9 @@ class Capture:
 
     def start(self):
         """Starts capturing HTTP packets on the `interface_id`."""
-        LOGGER.info(f"Starting to capture HTTP packets on interface ID {self.interface_id}.")
+        LOGGER.info(f"Initializing live capture for interface ID {self.interface_id}...")
         capture = pyshark.LiveCapture(interface=self.interface_id, capture_filter="http")
+        LOGGER.info("Live capture initialization complete.")
         for packet in capture.sniff_continuously():
             if not self._continue:
                 break
