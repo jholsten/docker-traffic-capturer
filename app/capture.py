@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import timezone
 from typing import Dict, List, Optional, Tuple, cast
 
 import pyshark
@@ -129,7 +130,7 @@ class Capture:
         source_port, destination_port = self._get_ports(packet)
         source_ip, destination_ip = self._get_ip_addresses(packet)
         return HttpPacket(
-            timestamp=packet.sniff_time,
+            timestamp=packet.sniff_time.astimezone(timezone.utc),
             source_ip=source_ip,
             source_port=source_port,
             destination_ip=destination_ip,
