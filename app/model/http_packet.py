@@ -10,6 +10,9 @@ from app.model.http_response import HttpResponse
 class HttpPacket(BaseModel):
     """Represents one captured HTTP packet."""
 
+    number: int
+    """Frame number of this packet."""
+
     timestamp: datetime
     """Timestamp of when this packet was sent."""
 

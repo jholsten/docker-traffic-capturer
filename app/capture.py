@@ -120,13 +120,14 @@ class Capture:
     def _parse_http_packet(self, packet: PysharkPacket) -> Optional[HttpPacket]:
         """Parses the given `packet` captured by pyshark to an instance of `HttpPacket`.
         Returns `None` in case the given package does not contain an HTTP layer."""
-        if "http" not in packet:
+        if "http" not in packet or packet.number is None:
             return None
         request = self._parse_request(packet.http)
         response = self._parse_response(packet.http)
         source_port, destination_port = self._get_ports(packet)
         source_ip, destination_ip = self._get_ip_addresses(packet)
         return HttpPacket(
+            number=packet.number,
             timestamp=packet.sniff_time.astimezone(timezone.utc),
             source_ip=source_ip,
             source_port=source_port,
@@ -157,10 +158,11 @@ class Capture:
         if http_layer.get("response") is None:
             return None
         return HttpResponse(
-            request_in=http_layer.get("request_in"),
             version=str(http_layer.get("response_version")),
             status_code=cast(int, http_layer.get("response_code")),
             status_code_description=str(http_layer.get("response_code_desc")),
+            request_in=http_layer.get("request_in"),
+            duration=http_layer.get("time"),
             headers=self._parse_headers(cast(LayerFieldsContainer, http_layer.get("response_line")).all_fields),
             payload=http_layer.get("file_data"),
         )
