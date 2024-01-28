@@ -64,9 +64,7 @@ class Capture:
         """Starts capturing HTTP packets on the `interface_id`. Note that it takes a couple
         of milliseconds until TShark actually starts capturing packets."""
         LOGGER.info(f"Starting live capture for interface ID {self.interface_id}...")
-        interfaces = [i for i in cast(List[str], tshark.get_all_tshark_interfaces_names()) if i.startswith("veth")]
-        interfaces += [self.interface_id]
-        capture = pyshark.LiveCapture(interface=interfaces, capture_filter="http", debug=True)
+        capture = pyshark.LiveCapture(interface=self.interface_id, capture_filter="http", debug=True)
         capture.apply_on_packets(self._on_packet_captured)
 
     def stop(self):
