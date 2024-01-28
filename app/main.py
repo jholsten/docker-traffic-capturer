@@ -1,6 +1,6 @@
 import os
 import threading
-from typing import List
+from typing import List, Union
 
 import uvicorn
 from fastapi import FastAPI
@@ -8,6 +8,8 @@ from fastapi import FastAPI
 from app.capture import Capture
 from app.config.logging_config import get_logger
 from app.model.http_packet import HttpPacket
+from app.model.http_request import HttpRequest
+from app.model.http_response import HttpResponse
 from app.utils import get_available_port
 
 LOGGER = get_logger("capture")
@@ -26,7 +28,7 @@ class API(FastAPI):
 
         @self.get(
             "/",
-            response_model=List[HttpPacket],
+            response_model=List[Union[HttpRequest, HttpResponse]],
             summary="Get all packets that have been captured so far",
             description=(
                 "Returns all packets that have been captured since the start of "
@@ -39,7 +41,7 @@ class API(FastAPI):
 
         @self.get(
             "/collect",
-            response_model=List[HttpPacket],
+            response_model=List[Union[HttpRequest, HttpResponse]],
             summary="Collect all captured packets and then reset the internal memory",
             description="Returns all packages that have been recorded since the last time this method was called.",
         )
