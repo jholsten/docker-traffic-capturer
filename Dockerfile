@@ -8,6 +8,4 @@ RUN pip3 install -r /opt/requirements.txt
 WORKDIR /app
 COPY . .
 
-EXPOSE 8000
-
 CMD "python3" "-m" "app.main"
