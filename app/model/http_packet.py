@@ -13,6 +13,9 @@ class HttpPacket(BaseModel):
     number: int
     """Frame number of this packet."""
 
+    network_id: str
+    """ID of the network in which this packet was captured."""
+
     timestamp: datetime
     """Timestamp of when this packet was sent."""
 

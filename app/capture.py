@@ -128,6 +128,7 @@ class Capture:
         source_ip, destination_ip = self._get_ip_addresses(packet)
         return HttpPacket(
             number=packet.number,
+            network_id=self.network_id,
             timestamp=packet.sniff_time.astimezone(timezone.utc),
             source_ip=source_ip,
             source_port=source_port,
