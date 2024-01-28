@@ -1,10 +1,18 @@
 from datetime import datetime
-from typing import Optional
+from enum import Enum
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel
 
-from app.model.http_request import HttpRequest
-from app.model.http_response import HttpResponse
+
+class HttpPacketType(str, Enum):
+    """Type of a HTTP packet."""
+
+    REQUEST = "REQUEST"
+    """Packet represents a request."""
+
+    RESPONSE = "RESPONSE"
+    """Packets represents a response."""
 
 
 class HttpPacket(BaseModel):
@@ -19,6 +27,9 @@ class HttpPacket(BaseModel):
     timestamp: datetime
     """Timestamp of when this packet was sent."""
 
+    type: HttpPacketType
+    """Type of this HTTP packet."""
+
     source_ip: str
     """IP address of the host which has sent this packet."""
 
@@ -31,10 +42,11 @@ class HttpPacket(BaseModel):
     destination_port: int
     """Port of the application which has received this packet."""
 
-    request: Optional[HttpRequest]
-    """Additional information about the HTTP request. Is only set
-    if this packet represents a request."""
+    version: str
+    """HTTP protocol version which was used."""
 
-    response: Optional[HttpResponse]
-    """Additional information about the HTTP response. Is only set
-    if this packet represents a response."""
+    headers: Dict[str, str]
+    """Request/Response headers as map of key and value."""
+
+    payload: Optional[Any]
+    """Request/Response body of this packet."""

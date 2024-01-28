@@ -11,7 +11,7 @@ from pyshark.packet.packet import Packet as PysharkPacket
 from pyshark.tshark import tshark
 
 from app.config.logging_config import get_logger
-from app.model.http_packet import HttpPacket
+from app.model.http_packet import HttpPacket, HttpPacketType
 from app.model.http_request import HttpRequest
 from app.model.http_response import HttpResponse
 
@@ -122,29 +122,30 @@ class Capture:
         Returns `None` in case the given package does not contain an HTTP layer."""
         if "http" not in packet or packet.number is None:
             return None
-        request = self._parse_request(packet.http)
-        response = self._parse_response(packet.http)
-        source_port, destination_port = self._get_ports(packet)
+
+        if request := self._parse_request(packet):
+            return request
+        else:
+            return self._parse_response(packet)
+
+    def _parse_request(self, packet: PysharkPacket) -> Optional[HttpRequest]:
+        """Parses information from the given `packet` to an instance of `HttpRequest`.
+        Returns `None` in case the http layer does not container any request information,
+        i.e. the packet does not represent a request."""
+        http_layer: BaseLayer = packet.http
+        if http_layer.get("request") is None:
+            return None
         source_ip, destination_ip = self._get_ip_addresses(packet)
-        return HttpPacket(
-            number=packet.number,
+        source_port, destination_port = self._get_ports(packet)
+        return HttpRequest(
+            number=packet.number,  # type: ignore
             network_id=self.network_id,
             timestamp=packet.sniff_time.astimezone(timezone.utc),
+            type=HttpPacketType.REQUEST,
             source_ip=source_ip,
             source_port=source_port,
             destination_ip=destination_ip,
             destination_port=destination_port,
-            request=request,
-            response=response,
-        )
-
-    def _parse_request(self, http_layer: BaseLayer) -> Optional[HttpRequest]:
-        """Parses information from the given `http_layer` to an instance of `HttpRequest`.
-        Returns `None` in case the layer does not contain any request information, i.e.
-        the packet represents a response."""
-        if http_layer.get("request") is None:
-            return None
-        return HttpRequest(
             version=str(http_layer.get("request_version")),
             uri=str(http_layer.get("request_uri")),
             method=str(http_layer.get("request_method")),
@@ -152,13 +153,24 @@ class Capture:
             payload=http_layer.get("file_data"),
         )
 
-    def _parse_response(self, http_layer: BaseLayer) -> Optional[HttpResponse]:
-        """Parses information from the given `http_layer` to an instance of `HttpResponse`.
-        Returns `None` in case the layer does not contain any response information, i.e.
-        the packet represents a request."""
+    def _parse_response(self, packet: PysharkPacket) -> Optional[HttpResponse]:
+        """Parses information from the given `packet` to an instance of `HttpResponse`.
+        Returns `None` in case the http layer does not contain any response information,
+        i.e. the packet does not represent a response."""
+        http_layer: BaseLayer = packet.http
         if http_layer.get("response") is None:
             return None
+        source_ip, destination_ip = self._get_ip_addresses(packet)
+        source_port, destination_port = self._get_ports(packet)
         return HttpResponse(
+            number=packet.number,  # type: ignore
+            network_id=self.network_id,
+            timestamp=packet.sniff_time.astimezone(timezone.utc),
+            type=HttpPacketType.RESPONSE,
+            source_ip=source_ip,
+            source_port=source_port,
+            destination_ip=destination_ip,
+            destination_port=destination_port,
             version=str(http_layer.get("response_version")),
             status_code=cast(int, http_layer.get("response_code")),
             status_code_description=str(http_layer.get("response_code_desc")),
