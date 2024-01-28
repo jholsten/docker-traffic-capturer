@@ -6,6 +6,8 @@ from pydantic import BaseModel
 class HttpResponse(BaseModel):
     """Represents the information about a captured HTTP response."""
 
+    request_in: Optional[int]
+
     version: str
     """HTTP protocol version which was used for the HTTP response."""
 

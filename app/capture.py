@@ -157,6 +157,7 @@ class Capture:
         if http_layer.get("response") is None:
             return None
         return HttpResponse(
+            request_in=http_layer.get("request_in"),
             version=str(http_layer.get("response_version")),
             status_code=cast(int, http_layer.get("response_code")),
             status_code_description=str(http_layer.get("response_code_desc")),
