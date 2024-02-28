@@ -180,15 +180,17 @@ class Capture:
             payload=http_layer.get("file_data"),
         )
 
-    def _parse_headers(self, line: Optional[List[LayerField]]) -> Dict[str, str]:
+    def _parse_headers(self, line: Optional[List[LayerField]]) -> Dict[str, List[str]]:
         """Parses headers from the given request or response line."""
         if not line:
             return {}
-        headers: Dict[str, str] = {}
+        headers: Dict[str, List[str]] = {}
         for entry in line:
             key = str(entry.showname_key)
             value = str(entry.showname_value).replace("\\n", "").replace("\\r", "")
-            headers[key] = value
+            if key not in headers:
+                headers[key] = []
+            headers[key].append(value)
         return headers
 
     def _get_ports(self, packet: PysharkPacket) -> Tuple[int, int]:

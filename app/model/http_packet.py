@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -45,8 +45,8 @@ class HttpPacket(BaseModel):
     version: str
     """HTTP protocol version which was used."""
 
-    headers: Dict[str, str]
-    """Request/Response headers as map of key and value."""
+    headers: Dict[str, List[str]]
+    """Request/Response headers as map of key and values."""
 
     payload: Optional[Any]
     """Request/Response body of this packet."""
