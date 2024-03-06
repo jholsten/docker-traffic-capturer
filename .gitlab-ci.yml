@@ -1,6 +1,5 @@
 variables:
   DOCKER_TLS_CERTDIR: ""
-  LATEST_IMAGE: ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:latest
 
 services:
   - name: docker:20.10.20-dind
@@ -19,8 +18,15 @@ build:
   stage: build
   image: docker:20.10.20
   script:
-    - docker build -t $LATEST_IMAGE .
-    - docker push $LATEST_IMAGE
+    - docker context create multi-arch-builder
+    - docker buildx create multi-arch-builder --driver docker-container --use
+    - docker buildx inspect --bootstrap
+    - docker buildx build --pull
+      --cache-from type=registry,ref="$CI_REGISTRY_IMAGE:cache"
+      --cache-to type=registry,ref="$CI_REGISTRY_IMAGE:cache"
+      --platform linux/amd64,linux/arm64
+      -t "${CI_REGISTRY_IMAGE}:latest"
+      . --push
   tags:
     - docker
     - amd64
